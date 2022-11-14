@@ -65,9 +65,9 @@ class IMDB:
         self,
         refresh: bool = False,
         download_path: Union[str, Path]=Path(tempfile.gettempdir()) / 'pyimdb',
-        region: list[str]=['FR','GB','US','CA'],
-        language: list[str]=['fr','en','ca'],
-        type: list[str]=['movie','tvSeries','tvMiniSeries']
+        region: list=['FR','GB','US','CA'],
+        language: list=['fr','en','ca'],
+        type: list=['movie','tvSeries','tvMiniSeries']
         ):
 
         self.CMD['akas'] = self.CMD['akas'].format('|'.join(region), '|'.join(language))
