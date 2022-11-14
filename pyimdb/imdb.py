@@ -70,19 +70,21 @@ class IMDB:
         type: list=['movie','tvSeries','tvMiniSeries']
         ):
 
-        self.CMD['akas'] = self.CMD['akas'].format('|'.join(region), '|'.join(language))
-        self.CMD['basics'] = self.CMD['basics'].format('|'.join(type))
-
         self.data = {}
+        self.cmd = {}
+
+        self.cmd['akas'] = self.CMD['akas'].format('|'.join(region), '|'.join(language))
+        self.cmd['basics'] = self.CMD['basics'].format('|'.join(type))
+
 
         if not isinstance(download_path, Path):
             download_path = Path(download_path)
         if not os.path.isdir(download_path):
             os.makedirs(download_path, exist_ok=True)
 
-        self.FILENAME = {k:download_path / v for k,v in self.FILENAME.items()}
+        self.filename = {k:download_path / v for k,v in self.FILENAME.items()}
 
-        if refresh or not all([os.path.exists(i) for i in self.FILENAME.values()]):
+        if refresh or not all([os.path.exists(i) for i in self.filename.values()]):
             self.__download()
 
         self.__load()
@@ -91,17 +93,17 @@ class IMDB:
 
         for name, url in self.URL.items():
             with tqdm(unit = 'B', unit_scale = True, unit_divisor = 1024, miniters = 1, desc = name) as t:
-                urlretrieve(url, self.FILENAME[name], my_hook(t))
+                urlretrieve(url, self.filename[name], my_hook(t))
 
     def __load(self):
 
-        for name, cmd in self.CMD.items():
+        for name, cmd in self.cmd.items():
 
-            spinner = Halo(text=f'Loading data from {self.FILENAME[name]}', spinner='dots')
+            spinner = Halo(text=f'Loading data from {self.filename[name]}', spinner='dots')
             spinner.start()
 
             try:
-                a = subprocess.Popen(cmd.format(self.FILENAME[name]), stdout=subprocess.PIPE, shell=True)
+                a = subprocess.Popen(cmd.format(self.filename[name]), stdout=subprocess.PIPE, shell=True)
                 b = StringIO(a.communicate()[0].decode('utf-8'))
 
                 self.data[name] = pd.read_csv(b, sep="\t", dtype=str)
@@ -114,7 +116,7 @@ class IMDB:
         
     def clear(self):
 
-        for file in self.FILENAME.values():
+        for file in self.filename.values():
 
             spinner = Halo(text=f'Removing {file}', spinner='dots')
             spinner.start()
