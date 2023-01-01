@@ -23,6 +23,8 @@ jobs:
     - name: Change dir to es example
       run: cd examples/es-index
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ${{ secrets.REGISTRY_URL }}/imdb_indexing:${GITHUB_SHA::7} --tag ${{ secrets.REGISTRY_URL }}/imdb_indexing:latest
+      run: |
+      docker build . --file Dockerfile --tag ${{ secrets.REGISTRY_URL }}/imdb-indexing:${GITHUB_SHA::7} 
+      docker build . --file Dockerfile --tag ${{ secrets.REGISTRY_URL }}/imdb-indexing:latest
     - name: Push to repository
-      run: docker push --all-tags ${{ secrets.REGISTRY_URL }}/imdb_indexing
+      run: docker push --all-tags ${{ secrets.REGISTRY_URL }}/imdb-indexing
