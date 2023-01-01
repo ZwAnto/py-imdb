@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: es-imdb-indexing
+spec:
+  containers:
+  - name: pi
+    image: perl
+    env:
+      - ES_HOST: 192.168.1.100
+      - ES_PORT: 30200
+    command: ["python", "index.py"]
+  restartPolicy: Never

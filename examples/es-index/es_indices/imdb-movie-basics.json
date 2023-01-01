@@ -1,0 +1,50 @@
+{
+  "settings": {
+    "max_ngram_diff" : "2",
+    "analysis": {
+      "analyzer": {
+        "movie_analyser": {
+          "tokenizer": "edge_ngram",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "apostrophe"
+          ]
+        }
+      },
+      "tokenizer": {
+      "edge_ngram": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 15,
+          "token_chars": [
+            "letter",
+            "digit"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": { 
+    "properties": {
+      "source": {
+        "type": "text"
+      },
+      "imdbId": {
+        "type": "text"
+      },
+      "type": {
+        "type": "text"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "movie_analyser"
+      },
+      "year": {
+        "type": "text",
+        "analyzer": "movie_analyser"
+      }
+    }
+  
+  }
+}
