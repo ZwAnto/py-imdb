@@ -1,12 +1,14 @@
 
 import logging
 import os
+import re
 import subprocess
 import tempfile
 from io import StringIO
 from pathlib import Path
-from urllib.request import urlretrieve
 from typing import Union
+from urllib.request import urlretrieve
+
 import pandas as pd
 from halo import Halo
 from tqdm import tqdm
@@ -46,9 +48,9 @@ def my_hook(t):
 
 class IMDB:
 
-    CMD = {
-        'akas': "zgrep -P '^[^\t]+\t[^\t]+\t[^\t]+\t(\\N|{})\t(\\N|{})|titleId' {{}}",
-        'basics': "zgrep -P '^tt[0-9]+\t({})\t|tconst' {{}}",
+    FILTER = {
+        'akas': lambda x: x,
+        'basics': lambda x: x
     }
 
     URL = {
@@ -65,17 +67,17 @@ class IMDB:
         self,
         refresh: bool = False,
         download_path: Union[str, Path]=Path(tempfile.gettempdir()) / 'pyimdb',
-        region: list=['FR','GB','US','CA'],
-        language: list=['fr','en','ca'],
-        type: list=['movie','tvSeries','tvMiniSeries']
+        region: set=set(['FR','GB','US','CA']),
+        language: set=set(['fr','en','ca']),
+        type: set=set(['movie','tvSeries','tvMiniSeries']),
+        chunksize=None
         ):
 
         self.data = {}
         self.cmd = {}
 
-        self.cmd['akas'] = self.CMD['akas'].format('|'.join(region), '|'.join(language))
-        self.cmd['basics'] = self.CMD['basics'].format('|'.join(type))
-
+        self.FILTER['akas']= lambda x: x[x.region.isin(region) & x.language.isin(language)]
+        self.FILTER['basics']= lambda x: x[x.titleType.isin(type)]
 
         if not isinstance(download_path, Path):
             download_path = Path(download_path)
@@ -84,10 +86,19 @@ class IMDB:
 
         self.filename = {k:download_path / v for k,v in self.FILENAME.items()}
 
-        if refresh or not all([os.path.exists(i) for i in self.filename.values()]):
+        self.rows = {k: self.__count_rows(f.with_suffix('')) for k,f in self.filename.items()}
+
+        if refresh or not all([os.path.exists(i.with_suffix('')) for i in self.filename.values()]):
             self.__download()
 
-        self.__load()
+        if chunksize is None:
+            self.__load()
+        else:
+            self.__load_chunk(chunksize)
+
+    def __count_rows(self,file):
+        a = subprocess.Popen(f'wc -l {file}', stdout=subprocess.PIPE, shell=True)
+        return int(a.communicate()[0].decode('utf-8').split()[0]) - 1
 
     def __download(self):
 
@@ -95,25 +106,30 @@ class IMDB:
             with tqdm(unit = 'B', unit_scale = True, unit_divisor = 1024, miniters = 1, desc = name) as t:
                 urlretrieve(url, self.filename[name], my_hook(t))
 
+            _ = subprocess.call(f"gunzip -f {self.filename[name]}".split())
+
     def __load(self):
 
-        for name, cmd in self.cmd.items():
+        for name in self.filename.keys():
 
-            spinner = Halo(text=f'Loading data from {self.filename[name]}', spinner='dots')
+            spinner = Halo(text=f'Loading data from {self.filename[name].with_suffix("")}', spinner='dots')
             spinner.start()
 
             try:
-                a = subprocess.Popen(cmd.format(self.filename[name]), stdout=subprocess.PIPE, shell=True)
-                b = StringIO(a.communicate()[0].decode('utf-8'))
-
-                self.data[name] = pd.read_csv(b, sep="\t", dtype=str)
-
+                self.data[name] = self.FILTER[name](pd.read_csv(self.filename[name].with_suffix(""), sep="\t", dtype=str))
                 spinner.succeed()
             except:
                 spinner.fail()
-
-        self.data['akas'] = self.data['akas'][self.data['akas'].titleId.isin(self.data['basics'].tconst)]
         
+    def __chunk_generator(self, name, chunksize):
+        for chunk in pd.read_csv(self.filename[name].with_suffix(""), chunksize=chunksize, sep="\t", dtype=str):
+            yield self.FILTER[name](chunk)
+
+    def __load_chunk(self, chunksize):
+
+        for name in self.filename.keys():
+            self.data[name] = self.__chunk_generator(name, chunksize)
+
     def clear(self):
 
         for file in self.filename.values():
