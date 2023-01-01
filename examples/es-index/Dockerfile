@@ -8,7 +8,7 @@ RUN sed -i 's/^# *\(fr_FR.UTF-8\)/\1/' /etc/locale.gen && locale-gen
 RUN python -m pip install -U pip
 
 RUN python -m pip install git+https://github.com/ZwAnto/py-imdb.git
-RUN python -m pip install elasticsearch==8.4.3 numpy==1.23.5
+RUN python -m pip install elasticsearch==8.4.3 numpy==1.23.5 requests==2.28.1
 
 WORKDIR /opt
 
