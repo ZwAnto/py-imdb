@@ -33,8 +33,5 @@ jobs:
     - name: Build the Docker image
       run: |
         cd examples/es-index
-        docker buildx build . --platform linux/arm64 --file Dockerfile --tag ${{ secrets.REGISTRY_URL }}/imdb-indexing:${GITHUB_SHA::7} 
-        docker buildx build . --platform linux/arm64 --file Dockerfile --tag ${{ secrets.REGISTRY_URL }}/imdb-indexing:latest
-
-    - name: Push to repository
-      run: docker push --all-tags ${{ secrets.REGISTRY_URL }}/imdb-indexing
+        docker buildx build . --platform linux/arm64 -f Dockerfile -t ${{ secrets.REGISTRY_URL }}/imdb-indexing:${GITHUB_SHA::7} --push
+        docker buildx build . --platform linux/arm64 -f Dockerfile -t ${{ secrets.REGISTRY_URL }}/imdb-indexing:latest --push
