@@ -20,8 +20,9 @@ jobs:
         registry: ${{ secrets.REGISTRY_URL }}
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
-    - name: Build the Docker image
+    - name: Change dir to es example
       run: cd examples/es-index
+    - name: Build the Docker image
       run: docker build . --file Dockerfile --tag ${{ secrets.REGISTRY_URL }}/imdb-indexing:${GITHUB_SHA::7} --tag ${{ secrets.REGISTRY_URL }}/imdb-indexing:latest
     - name: Push to repository
       run: docker push --all-tags ${{ secrets.REGISTRY_URL }}/imdb-indexing
