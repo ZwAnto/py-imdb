@@ -86,11 +86,11 @@ class IMDB:
 
         self.filename = {k:download_path / v for k,v in self.FILENAME.items()}
 
-        self.rows = {k: self.__count_rows(f.with_suffix('')) for k,f in self.filename.items()}
-
         if refresh or not all([os.path.exists(i.with_suffix('')) for i in self.filename.values()]):
             self.__download()
-
+        
+        self.rows = {k: self.__count_rows(f.with_suffix('')) for k,f in self.filename.items()}
+        
         if chunksize is None:
             self.__load()
         else:
