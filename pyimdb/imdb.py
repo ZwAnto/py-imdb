@@ -67,8 +67,8 @@ class IMDB:
         self,
         refresh: bool = False,
         download_path: Union[str, Path]=Path(tempfile.gettempdir()) / 'pyimdb',
-        region: set=set(['FR','GB','US','CA']),
-        language: set=set(['fr','en','ca']),
+        region: set=set(['FR', 'GB', 'US', 'CA']),
+        language: set=set(['fr', 'en', 'ca']),
         type: set=set(['movie','tvSeries','tvMiniSeries']),
         chunksize=None
         ):
@@ -76,7 +76,7 @@ class IMDB:
         self.data = {}
         self.cmd = {}
 
-        self.FILTER['akas']= lambda x: x[x.region.isin(region) & x.language.isin(language)]
+        self.FILTER['akas']= lambda x: x[x.region.isin(region) | x.language.isin(language)]
         self.FILTER['basics']= lambda x: x[x.titleType.isin(type)]
 
         if not isinstance(download_path, Path):
